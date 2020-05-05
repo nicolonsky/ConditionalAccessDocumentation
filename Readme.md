@@ -4,7 +4,7 @@
 
 This PowerShell script adapts functionality from the [Modern Workplace Concierge](https://github.com/nicolonsky/ModernWorkplaceConcierge) and documents your Conditional Access Policies.
 
-* This script uses the [Powershell SDK for Microsoft Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell) module.     Because of a [recent issue](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/189) with the module **this script only works with [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/latest)**.
+This script uses the [Powershell SDK for Microsoft Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell) module.     Because of a [recent issue](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/189) with the module **this script only works with [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/latest)**.
 
 1. Install this script from the PowerShell gallery (dependent modules are automatically installed):
 
