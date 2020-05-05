@@ -39,4 +39,4 @@ The following steps might help you to format the documentation.
 
     ![Example](https://tech.nicolonsky.ch/content/images/2020/04/image-4.png)
 6. Example
-    ![Example](Example/Example.png)
+    ![Example](https://raw.githubusercontent.com/nicolonsky/ConditionalAccessDocumentation/master/Example/Example.png)
