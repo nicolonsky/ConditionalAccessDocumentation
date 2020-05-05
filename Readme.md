@@ -18,9 +18,9 @@ This script uses the [Powershell SDK for Microsoft Graph](https://github.com/mic
     
     ```& "C:\Repos\Invoke-ConditionalAccessDocumentation.ps1"```
     
-4. Pretty format the csv with excel & save it as excel workbook
+4. Pretty format the csv with excel & save it as excel workbook 
 
-5. Example: ![Example](https://raw.githubusercontent.com/nicolonsky/ConditionalAccessDocumentation/master/Example/Example.png)
+![Example](https://raw.githubusercontent.com/nicolonsky/ConditionalAccessDocumentation/master/Example/Example.png)
 
 ## Excel gimmicks
 The following steps might help you to format the documentation.
