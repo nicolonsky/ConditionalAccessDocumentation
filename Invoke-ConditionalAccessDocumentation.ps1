@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.1.6
+.VERSION 1.1.7
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -452,7 +452,7 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies){
         }
         # Resolve object ID's of excluded locations
         $excludeLocations = @()
-        $conditionalAccessPolicy.Conditions.LocationIncludeLocations | ForEach-Object {
+        $conditionalAccessPolicy.Conditions.LocationExcludeLocations | ForEach-Object {
             $locationId = $PSItem
             if (Test-Guid $PSItem){
                 $excludeLocations += $namedLocations | Where-Object {$PSItem.Id -eq $locationId} | Select-Object -ExpandProperty DisplayName
