@@ -4,26 +4,25 @@
 
 This PowerShell script adapts functionality from the [Modern Workplace Concierge](https://github.com/nicolonsky/ModernWorkplaceConcierge) and documents your Conditional Access Policies.
 
-* This script uses the [Powershell SDK for Microsoft Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell) module.     Because of a [recent issue](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/189) with the module **this script only works with [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/latest)**.
+This script uses the [Powershell SDK for Microsoft Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell) module.     Because of a [recent issue](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/189) with the module **this script only works with [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/latest)**.
 
-* Install this script from the PowerShell gallery (dependent modules are automatically installed):
+1. Install this script from the PowerShell gallery (dependent modules are automatically installed):
 
     ```Install-Script -Name Invoke-ConditionalAccessDocumentation```
-
-## Creating the documentation
-
-* Connect to Microsoft Graph
+2. Connect to Microsoft Graph
 
     Grant initial consent: ```Connect-Graph -Scopes @("Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All")```
     
     Afterwards: ```Connect-Graph```
-* Run script via PowerShell dot sourcing
-
+3. Run script via PowerShell dot sourcing
+    
     ```& "C:\Repos\Invoke-ConditionalAccessDocumentation.ps1"```
     
-* Pretty format the csv with excel & save it as excel workbook
+4. Pretty format the csv with excel & save it as excel workbook
 
-### Excel gimmicks
+5. Example: ![Example](https://raw.githubusercontent.com/nicolonsky/ConditionalAccessDocumentation/master/Example/Example.png)
+
+## Excel gimmicks
 The following steps might help you to format the documentation.
 
 1. Copy the CSV data to the clipboard
@@ -38,5 +37,3 @@ The following steps might help you to format the documentation.
 4. Expand the rows and columns and ensure text wrap is turned on
 
     ![Example](https://tech.nicolonsky.ch/content/images/2020/04/image-4.png)
-6. Example
-    ![Example](https://raw.githubusercontent.com/nicolonsky/ConditionalAccessDocumentation/master/Example/Example.png)
