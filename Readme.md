@@ -6,9 +6,16 @@ This PowerShell script adapts functionality from the [Modern Workplace Concierge
 
 This script uses the [Powershell SDK for Microsoft Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell) module.     Because of a [recent issue](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/189) with the module **this script only works with [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/latest)**.
 
+0. **Start PowerShell 7** 
+
+    Again - this only works with PowerShell 7.
+
 1. Install this script from the PowerShell gallery (dependent modules are automatically installed):
 
-    ```Install-Script -Name Invoke-ConditionalAccessDocumentation```
+    ```Install-Script -Name Invoke-ConditionalAccessDocumentation -Scope CurrentUser```
+    
+    Script is saved to the user's default script lcoation: ```"C:\Users\%USERNAME%\Documents\PowerShell\Scripts"```
+    
 2. Connect to Microsoft Graph
 
     Grant initial consent: ```Connect-Graph -Scopes @("Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All")```
@@ -16,7 +23,7 @@ This script uses the [Powershell SDK for Microsoft Graph](https://github.com/mic
     Afterwards: ```Connect-Graph```
 3. Run script via PowerShell dot sourcing
     
-    ```& "C:\Repos\Invoke-ConditionalAccessDocumentation.ps1"```
+    ```& "C:\Users\$env:USERNAME\Documents\PowerShell\Scripts\Invoke-ConditionalAccessDocumentation.ps1"```
     
 4. Pretty format the csv with excel & save it as excel workbook 
 
