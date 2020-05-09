@@ -2,19 +2,15 @@
 
 [![PSGallery Version](https://img.shields.io/powershellgallery/v/Invoke-ConditionalAccessDocumentation.svg?style=flat-square&label=PSGallery%20Version)](https://www.powershellgallery.com/packages/Invoke-ConditionalAccessDocumentation) [![PSGallery Downloads](https://img.shields.io/powershellgallery/dt/Invoke-ConditionalAccessDocumentation?style=flat-square&label=PSGallery%20Downloads)](https://www.powershellgallery.com/packages/Invoke-ConditionalAccessDocumentation)
 
-This PowerShell script adapts functionality from the [Modern Workplace Concierge](https://github.com/nicolonsky/ModernWorkplaceConcierge) and documents your Conditional Access Policies.
+This PowerShell script adapts functionality from the [Modern Workplace Concierge](https://github.com/nicolonsky/ModernWorkplaceConcierge) and documents your Conditional Access Policies. The script exports all the data as a csv file which can be pretty formatted as excel workbook.
 
-This script uses the [Powershell SDK for Microsoft Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell) module.     Because of a [recent issue](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/189) with the module **this script only works with [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/latest)**.
-
-0. **Start PowerShell 7** 
-
-    Again - this only works with PowerShell 7.
+**This script is no longer limited to PowerShell 7 it also works with PowerShell 5.1 since commit [a49b25a](https://github.com/nicolonsky/ConditionalAccessDocumentation/commit/a49b25ad17c108c3fa1910aa603ed644f6c3f15a) / version 1.1.8.**
 
 1. Install this script from the PowerShell gallery (dependent modules are automatically installed):
 
     ```Install-Script -Name Invoke-ConditionalAccessDocumentation -Scope CurrentUser```
     
-    Script is saved to the user's default script lcoation: ```"C:\Users\%USERNAME%\Documents\PowerShell\Scripts"```
+    Script is saved to the user's default script lcoation: ```"C:\Users\%USERNAME%\Documents\WindowsPowerShell\Scripts"```
     
 2. Connect to Microsoft Graph
 
@@ -23,7 +19,7 @@ This script uses the [Powershell SDK for Microsoft Graph](https://github.com/mic
     Afterwards: ```Connect-Graph```
 3. Run script via PowerShell dot sourcing
     
-    ```& "C:\Users\$env:USERNAME\Documents\PowerShell\Scripts\Invoke-ConditionalAccessDocumentation.ps1"```
+    ```& "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Scripts\Invoke-ConditionalAccessDocumentation.ps1"```
     
 4. Pretty format the csv with excel & save it as excel workbook 
 
