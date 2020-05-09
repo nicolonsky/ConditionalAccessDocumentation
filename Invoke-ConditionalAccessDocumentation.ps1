@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.1.7
+.VERSION 1.1.8
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -24,7 +24,7 @@
     Purpose/Change:   Initial script development
 #>
 
-#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.ConditionalAccess'; ModuleVersion = '0.5.0'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '0.5.0'}, @{ ModuleName = 'Microsoft.Graph.Identity.ServicePrincipal'; ModuleVersion = '0.5.0'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryRoleTemplates'; ModuleVersion = '0.5.0'}, @{ ModuleName = 'Microsoft.Graph.Users.User'; ModuleVersion = '0.5.0'}, @{ ModuleName = 'Microsoft.Graph.Groups.Group'; ModuleVersion = '0.5.0'}
+#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.ConditionalAccess'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.ServicePrincipal'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryRoleTemplates'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Users.User'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Groups.Group'; ModuleVersion = '0.5.1'}
 
 function Test-Guid
 {
@@ -460,36 +460,40 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies){
                 $excludeLocations += $locationId
             }
         }
+
+        # delimiter for arrays in csv report
+        $separator = "`r`n"
+
         # Build custom object with properties
         $entry = [PSCustomObject]@{
 
             Name = $conditionalAccessPolicy.DisplayName
             State =  $conditionalAccessPolicy.State
 
-            IncludeUsers = $includeUsers | Join-String -Separator "`r`n"
-            IncludeGroups = $includeGroups | Join-String -Separator "`r`n"
-            IncludeRoles = $includeRoles  | Join-String -Separator "`r`n"
+            IncludeUsers = $includeUsers -join $separator
+            IncludeGroups = $includeGroups -join $separator
+            IncludeRoles = $includeRoles  -join $separator
 
-            ExcludeUsers = $excludeUsers| Join-String -Separator "`r`n"
-            ExcludeGroups = $excludeGroups | Join-String -Separator "`r`n"
-            ExcludeRoles = $excludeRoles | Join-String -Separator "`r`n"
+            ExcludeUsers = $excludeUsers-join $separator
+            ExcludeGroups = $excludeGroups -join $separator
+            ExcludeRoles = $excludeRoles -join $separator
 
-            IncludeApps = $includeApps | Join-String -Separator "`r`n"
-            ExcludeApps = $excludeApps | Join-String -Separator "`r`n"
+            IncludeApps = $includeApps -join $separator
+            ExcludeApps = $excludeApps -join $separator
 
-            IncludeUserActions = $conditionalAccessPolicy.Conditions.ApplicationIncludeUserActions | Join-String -Separator "`r`n"
-            ClientAppTypes = $conditionalAccessPolicy.Conditions.ClientAppTypes | Join-String -Separator "`r`n"
+            IncludeUserActions = $conditionalAccessPolicy.Conditions.ApplicationIncludeUserActions -join $separator
+            ClientAppTypes = $conditionalAccessPolicy.Conditions.ClientAppTypes -join $separator
 
-            IncludePlatforms = $conditionalAccessPolicy.Conditions.PlatformIncludePlatforms | Join-String -Separator "`r`n"
-            ExcludePlatforms = $conditionalAccessPolicy.Conditions.PlatformExcludePlatforms | Join-String -Separator "`r`n"
+            IncludePlatforms = $conditionalAccessPolicy.Conditions.PlatformIncludePlatforms -join $separator
+            ExcludePlatforms = $conditionalAccessPolicy.Conditions.PlatformExcludePlatforms -join $separator
 
-            IncludeLocations = $includeLocations | Join-String -Separator "`r`n"
-            ExcludeLocations = $excludeLocations | Join-String -Separator "`r`n"
+            IncludeLocations = $includeLocations -join $separator
+            ExcludeLocations = $excludeLocations -join $separator
 
-            IncludeDeviceStates = $conditionalAccessPolicy.Conditions.DeviceIncludeDeviceStates | Join-String -Separator "`r`n"
-            ExcludeDeviceStates = $conditionalAccessPolicy.Conditions.DeviceExcludeDeviceStates | Join-String -Separator "`r`n"
+            IncludeDeviceStates = $conditionalAccessPolicy.Conditions.DeviceIncludeDeviceStates -join $separator
+            ExcludeDeviceStates = $conditionalAccessPolicy.Conditions.DeviceExcludeDeviceStates -join $separator
 
-            GrantControls = $conditionalAccessPolicy.GrantControlBuiltInControls | Join-String -Separator "`r`n"
+            GrantControls = $conditionalAccessPolicy.GrantControlBuiltInControls -join $separator
             GrantControlsOperator = $conditionalAccessPolicy.GrantControlOperator
 
             ApplicationEnforcedRestrictions = $conditionalAccessPolicy.ApplicationEnforcedRestrictionIsEnabled
@@ -507,6 +511,6 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies){
 # Build export path (script directory)
 $exportPath = Join-Path $PSScriptRoot "ConditionalAccessDocumentation.csv"
 # Export report as csv
-$conditionalAccessDocumentation | Export-Csv -Path $exportPath
+$conditionalAccessDocumentation | Export-Csv -Path $exportPath -NoTypeInformation
 
 Write-Output "Exported Documentation to '$($exportPath)'"
