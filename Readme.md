@@ -4,8 +4,6 @@
 
 This PowerShell script adapts functionality from the [Modern Workplace Concierge](https://github.com/nicolonsky/ModernWorkplaceConcierge) and documents your Conditional Access Policies. The script exports all the data as a csv file which can be pretty formatted as excel workbook.
 
-**This script is no longer limited to PowerShell 7 it also works with PowerShell 5.1 since commit [a49b25a](https://github.com/nicolonsky/ConditionalAccessDocumentation/commit/a49b25ad17c108c3fa1910aa603ed644f6c3f15a) / version 1.1.8.**
-
 1. Install this script from the PowerShell gallery (dependent modules are automatically installed):
 
     ```Install-Script -Name Invoke-ConditionalAccessDocumentation -Scope CurrentUser```

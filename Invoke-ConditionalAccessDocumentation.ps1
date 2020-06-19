@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.1.8
+.VERSION 1.2.0
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -21,10 +21,9 @@
 .NOTES
     Author:           Nicola Suter
     Creation Date:    05.05.2020
-    Purpose/Change:   Initial script development
 #>
 
-#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.ConditionalAccess'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.ServicePrincipal'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryRoleTemplates'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Users.User'; ModuleVersion = '0.5.1'}, @{ ModuleName = 'Microsoft.Graph.Groups.Group'; ModuleVersion = '0.5.1'}
+#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.ConditionalAccess'; ModuleVersion = '0.7.0'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '0.7.0'}, @{ ModuleName = 'Microsoft.Graph.Identity.ServicePrincipal'; ModuleVersion = '0.7.0'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryRoleTemplates'; ModuleVersion = '0.7.0'}, @{ ModuleName = 'Microsoft.Graph.Users.User'; ModuleVersion = '0.7.0'}, @{ ModuleName = 'Microsoft.Graph.Groups.Group'; ModuleVersion = '0.7.0'}
 
 function Test-Guid
 {
@@ -332,13 +331,13 @@ $lookupTable = @{
 }
 
 # Get Conditional Access Policies
-$conditionalAccessPolicies = Get-MgConditionalAccessPolicy
+$conditionalAccessPolicies = Get-MgConditionalAccessPolicy -All
 #Get Conditional Access Named / Trusted Locations
-$namedLocations = Get-MgConditionalAccessNamedLocation
+$namedLocations = Get-MgConditionalAccessNamedLocation -All
 # Get Azure AD Directory Role Templates
-$directoryRoleTemplates = Get-MgDirectoryRoleTemplate
+$directoryRoleTemplates = Get-MgDirectoryRoleTemplate -All
 # Get Azure AD Service Principals
-$servicePrincipals = Get-MgServicePrincipal
+$servicePrincipals = Get-MgServicePrincipal -All
 # Init report
 $conditionalAccessDocumentation = @()
 
