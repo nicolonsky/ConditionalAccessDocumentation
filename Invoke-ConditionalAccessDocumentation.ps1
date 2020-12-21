@@ -25,7 +25,7 @@
     Creation Date:    05.05.2020
 #>
 
-#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.ConditionalAccess'; ModuleVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.ServicePrincipal'; ModuleVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryRoleTemplates'; ModuleVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Users.User'; ModuleVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Groups.Group'; ModuleVersion = '0.9.1'}
+#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.ConditionalAccess'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.ServicePrincipal'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryRoleTemplates'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Users.User'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Groups.Group'; RequiredVersion = '0.9.1'}
 
 function Test-Guid {
     <#
@@ -503,16 +503,16 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies) {
             IncludeDeviceStates             = $conditionalAccessPolicy.Conditions.Devices.IncludeDeviceStates -join $separator
             ExcludeDeviceStates             = $conditionalAccessPolicy.Conditions.Devices.ExcludeDeviceStates -join $separator
 
-            GrantControls                   = $conditionalAccessPolicy.GrantControlBuiltInControls -join $separator
-            GrantControlsOperator           = $conditionalAccessPolicy.GrantControlOperator
+            GrantControls                   = $conditionalAccessPolicy.GrantControls.BuiltInControls -join $separator
+            GrantControlsOperator           = $conditionalAccessPolicy.GrantControls.Operator
 
             SignInRiskLevels                = $conditionalAccessPolicy.Conditions.SignInRiskLevels -join $separator
             UserRiskLevels                  = $conditionalAccessPolicy.Conditions.UserRiskLevels -join $separator
 
-            ApplicationEnforcedRestrictions = $conditionalAccessPolicy.ApplicationEnforcedRestrictionIsEnabled
-            CloudAppSecurity                = $conditionalAccessPolicy.CloudAppSecurityIsEnabled
-            PersistentBrowser               = $conditionalAccessPolicy.PersistentBrowserMode
-            SignInFrequency                 = "$($conditionalAccessPolicy.SignInFrequencyValue) $($conditionalAccessPolicy.SignInFrequencyType)"
+            ApplicationEnforcedRestrictions = $conditionalAccessPolicy.SessionControls.ApplicationEnforcedRestrictions.IsEnabled
+            CloudAppSecurity                = $conditionalAccessPolicy.SessionControls.CloudAppSecurity.IsEnabled
+            PersistentBrowser               = $conditionalAccessPolicy.SessionControls.PersistentBrowser.Mode
+            SignInFrequency                 = "$($conditionalAccessPolicy.SessionControls.SignInFrequency.Value) $($conditionalAccessPolicy.SessionControls.SignInFrequency.Type)"
         }
         # Add entry to report
         $conditionalAccessDocumentation += $entry
