@@ -12,7 +12,7 @@ This PowerShell script adapts functionality from the [Modern Workplace Concierge
     
 2. Connect to Microsoft Graph
 
-    Grant initial consent: ```Connect-Graph -Scopes @("Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All")```
+    Grant initial consent: ```Connect-Graph -Scopes @("Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All") -ContextScope Process```
     
     Afterwards: ```Connect-Graph```
 3. Run script via PowerShell dot sourcing
