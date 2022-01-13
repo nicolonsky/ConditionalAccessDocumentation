@@ -388,7 +388,7 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies) {
             $includeRoles += $directoryRoleTemplates | Where-Object { $PSItem.Id -eq $roleId } | Select-Object -ExpandProperty DisplayName
         }
         # Replace role display names if all selected
-        $maxRoles = 56
+        $maxRoles = 78
         if ($includeRoles.Count -eq $maxRoles) {
             $includeRoles = "All ($maxRoles)"
         }
