@@ -474,6 +474,8 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies) {
         # delimiter for arrays in csv report
         $separator = "`r`n"
 
+        if ($conditionalAccessPolicy.GrantControls.TermsOfUse) { $conditionalAccessPolicy.GrantControls.BuiltInControls += "TermsOfUse" }
+
         # Build custom object with properties
         $entry = [PSCustomObject]@{
 
