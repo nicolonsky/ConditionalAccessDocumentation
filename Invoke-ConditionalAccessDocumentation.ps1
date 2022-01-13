@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.4.0
+.VERSION 1.5.0
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -25,7 +25,7 @@
     Creation Date:    05.05.2020
 #>
 
-#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.ConditionalAccess'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.ServicePrincipal'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryRoleTemplates'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Users.User'; RequiredVersion = '0.9.1'}, @{ ModuleName = 'Microsoft.Graph.Groups.Group'; RequiredVersion = '0.9.1'}
+#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.SignIns'; RequiredVersion = '1.9.1'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; RequiredVersion = '1.9.1'}, @{ ModuleName = 'Microsoft.Graph.Users'; RequiredVersion = '1.9.1'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryManagement'; RequiredVersion = '1.9.1'}, @{ ModuleName = 'Microsoft.Graph.Groups'; RequiredVersion = '1.9.1'}, @{ ModuleName = 'Microsoft.Graph.Applications'; RequiredVersion = '1.9.1'}
 
 function Test-Guid {
     <#
