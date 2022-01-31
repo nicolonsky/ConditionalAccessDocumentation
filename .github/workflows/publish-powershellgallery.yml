@@ -1,0 +1,14 @@
+name: PSGallery
+on:
+  release:
+    types: [published]
+jobs:
+  publish_psgallery:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Publishing
+        run: |
+          Publish-Script -Path $(Get-ChildItem -Path . -Filter "*.ps1" | Select-Object -ExpandProperty Name) -NuGetApiKey ${{ secrets.PSGALLERY }}
+        shell: pwsh
