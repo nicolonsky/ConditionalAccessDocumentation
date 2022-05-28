@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.5.0
+.VERSION 1.6.0
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -203,8 +203,8 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies) {
                 IncludeLocations                = $includeLocations -join $separator
                 ExcludeLocations                = $excludeLocations -join $separator
 
-                IncludeDeviceStates             = $conditionalAccessPolicy.Conditions.Devices.IncludeDeviceStates -join $separator
-                ExcludeDeviceStates             = $conditionalAccessPolicy.Conditions.Devices.ExcludeDeviceStates -join $separator
+                DeviceFilterMode                = $conditionalAccessPolicy.Conditions.Devices.DeviceFilter.Mode
+                DeviceFilterRule             = $conditionalAccessPolicy.Conditions.Devices.DeviceFilter.Rule
 
                 GrantControls                   = $conditionalAccessPolicy.GrantControls.BuiltInControls -join $separator
                 GrantControlsOperator           = $conditionalAccessPolicy.GrantControls.Operator
