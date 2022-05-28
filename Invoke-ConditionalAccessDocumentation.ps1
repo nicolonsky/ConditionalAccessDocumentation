@@ -64,7 +64,7 @@ $directoryRoleTemplates = Get-MgDirectoryRoleTemplate -ErrorAction Stop
 # Get Azure AD Service Principals
 $servicePrincipals = Get-MgServicePrincipal -All -ErrorAction Stop
 # Init report
-$conditionalAccessDocumentation = [System.Collections.ArrayList]::new()
+$conditionalAccessDocumentation = [System.Collections.Generic.List[Object]]::new()
 
 # Process all Conditional Access Policies
 foreach ($conditionalAccessPolicy in $conditionalAccessPolicies) {
@@ -76,102 +76,102 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies) {
 
     try {
         # Resolve object IDs of included users
-        $includeUsers = [System.Collections.ArrayList]::new()
+        $includeUsers = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Users.IncludeUsers | ForEach-Object {
             if (Test-Guid $PSItem) {
-                $includeUsers.Add( $(Get-MgUser -userId $PSItem | Select-Object -ExpandProperty DisplayName -ErrorAction Stop)) | Out-Null
+                $includeUsers.Add( $(Get-MgUser -userId $PSItem | Select-Object -ExpandProperty DisplayName -ErrorAction Stop))
             }
             else {
-                $includeUsers.Add($PSItem) | Out-Null
+                $includeUsers.Add($PSItem)
             }
         }
         # Resolve object IDs of excluded users
-        $excludeUsers = [System.Collections.ArrayList]::new()
+        $excludeUsers = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Users.ExcludeUsers | ForEach-Object {
             if (Test-Guid $PSItem) {
-                $excludeUsers.Add($(Get-MgUser -userId $PSItem | Select-Object -ExpandProperty DisplayName -ErrorAction Stop)) | Out-Null
+                $excludeUsers.Add($(Get-MgUser -userId $PSItem | Select-Object -ExpandProperty DisplayName -ErrorAction Stop))
             }
             else {
-                $excludeUsers.Add($PSItem) | Out-Null
+                $excludeUsers.Add($PSItem)
             }
         }
         # Resolve object IDs of included groups
-        $includeGroups = [System.Collections.ArrayList]::new()
+        $includeGroups = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Users.IncludeGroups | ForEach-Object {
-            $includeGroups.Add($(Get-MgGroup -GroupId $PSItem | Select-Object -ExpandProperty DisplayName)) | Out-Null
+            $includeGroups.Add($(Get-MgGroup -GroupId $PSItem | Select-Object -ExpandProperty DisplayName))
         }
         # Resolve object IDs of excluded groups
-        $excludeGroups = [System.Collections.ArrayList]::new()
+        $excludeGroups = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Users.ExcludeGroups | ForEach-Object {
-            $excludeGroups.Add( $(Get-MgGroup -GroupId $PSItem | Select-Object -ExpandProperty DisplayName)) | Out-Null
+            $excludeGroups.Add( $(Get-MgGroup -GroupId $PSItem | Select-Object -ExpandProperty DisplayName))
         }
         # Resolve object IDs of included roles
-        $includeRoles = [System.Collections.ArrayList]::new()
+        $includeRoles = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Users.IncludeRoles | ForEach-Object {
             $roleId = $PSItem
-            $includeRoles.Add( $($directoryRoleTemplates | Where-Object { $PSItem.Id -eq $roleId } | Select-Object -ExpandProperty DisplayName)) | Out-Null
+            $includeRoles.Add( $($directoryRoleTemplates | Where-Object { $PSItem.Id -eq $roleId } | Select-Object -ExpandProperty DisplayName))
         }
 
         # Resolve object IDs of excluded roles
-        $excludeRoles = [System.Collections.ArrayList]::new()
+        $excludeRoles = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Users.ExcludeRoles | ForEach-Object {
             $roleId = $PSItem
-            $excludeRoles.Add( $($directoryRoleTemplates | Where-Object { $PSItem.Id -eq $roleId } | Select-Object -ExpandProperty DisplayName )) | Out-Null
+            $excludeRoles.Add( $($directoryRoleTemplates | Where-Object { $PSItem.Id -eq $roleId } | Select-Object -ExpandProperty DisplayName ))
         }
         # Resolve object IDs of included apps
-        $includeApps = [System.Collections.ArrayList]::new()
+        $includeApps = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Applications.IncludeApplications | ForEach-Object {
             $servicePrincipalId = $PSItem
             if (Test-Guid $PSItem) {
                 $res = $servicePrincipals | Where-Object { $PSItem.AppId -eq $servicePrincipalId } | Select-Object -ExpandProperty DisplayName
                 if ($null -ne $res) {
-                    $includeApps.Add($res) | Out-Null
+                    $includeApps.Add($res)
                 }
                 else {
-                    $includeApps.Add($servicePrincipalId) | Out-Null
+                    $includeApps.Add($servicePrincipalId)
                 }
             }
             else {
-                $includeApps.Add($servicePrincipalId) | Out-Null
+                $includeApps.Add($servicePrincipalId)
             }
         }
         # Resolve object IDs of excluded apps
-        $excludeApps = [System.Collections.ArrayList]::new()
+        $excludeApps = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Applications.ExcludeApplications | ForEach-Object {
             $servicePrincipalId = $PSItem
             if (Test-Guid $PSItem) {
                 $res = $servicePrincipals | Where-Object { $PSItem.AppId -eq $servicePrincipalId } | Select-Object -ExpandProperty DisplayName
                 if ($null -ne $res) {
-                    $excludeApps.Add($res) | Out-Null
+                    $excludeApps.Add($res)
                 }
                 else {
-                    $excludeApps.Add($servicePrincipalId) | Out-Null
+                    $excludeApps.Add($servicePrincipalId)
                 }
             }
             else {
-                $excludeApps.Add($servicePrincipalId) | Out-Null
+                $excludeApps.Add($servicePrincipalId)
             }
         }
         # Resolve object IDs of included locations
-        $includeLocations = [System.Collections.ArrayList]::new()
+        $includeLocations = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Locations.IncludeLocations | ForEach-Object {
             $locationId = $PSItem
             if (Test-Guid $PSItem) {
-                $includeLocations.Add( $($namedLocations | Where-Object { $PSItem.Id -eq $locationId } | Select-Object -ExpandProperty DisplayName)) | Out-Null
+                $includeLocations.Add( $($namedLocations | Where-Object { $PSItem.Id -eq $locationId } | Select-Object -ExpandProperty DisplayName))
             }
             else {
-                $includeLocations.Add($locationId) | Out-Null
+                $includeLocations.Add($locationId)
             }
         }
         # Resolve object IDs of excluded locations
-        $excludeLocations = [System.Collections.ArrayList]::new()
+        $excludeLocations = [System.Collections.Generic.List[Object]]::new()
         $conditionalAccessPolicy.Conditions.Locations.ExcludeLocations | ForEach-Object {
             $locationId = $PSItem
             if (Test-Guid $PSItem) {
-                $excludeLocations.Add( $($namedLocations | Where-Object { $PSItem.Id -eq $locationId } | Select-Object -ExpandProperty DisplayName)) | Out-Null
+                $excludeLocations.Add( $($namedLocations | Where-Object { $PSItem.Id -eq $locationId } | Select-Object -ExpandProperty DisplayName))
             }
             else {
-                $excludeLocations.Add($locationId) | Out-Null
+                $excludeLocations.Add($locationId)
             }
         }
 
@@ -217,7 +217,7 @@ foreach ($conditionalAccessPolicy in $conditionalAccessPolicies) {
                 PersistentBrowser               = $conditionalAccessPolicy.SessionControls.PersistentBrowser.Mode
                 SignInFrequency                 = "$($conditionalAccessPolicy.SessionControls.SignInFrequency.Value) $($conditionalAccessPolicy.SessionControls.SignInFrequency.Type)"
             }
-        ) | Out-Null
+        )
     }
     catch {
         Write-Error $PSItem
