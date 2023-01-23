@@ -80,7 +80,6 @@ function Resolve-MgObject {
                 Write-Warning "Unable to resolve directory object with ID $InputObject, might have been deleted!"
             }
         }
-
         return $InputObject
     }
 }
@@ -89,6 +88,11 @@ function Resolve-MgObject {
 
 if (-not $(Get-MgContext)) {
     Throw "Authentication needed, call 'Connect-Graph -Scopes `"Application.Read.All`", `"Group.Read.All`", `"Policy.Read.All`", `"RoleManagement.Read.Directory`", `"User.Read.All`""
+}
+
+if ((Get-MgProfile).Name.ToLower() -ne "beta"){
+    Write-Warning "You might miss some Conditional Access Policies as you are using the v1.0 Microsoft Graph Endpoint!"
+    Write-Warning "You can switch to the beta endpoint with: `"Select-MgProfile -Name `"beta`"`""
 }
 
 # Get Conditional Access Policies
