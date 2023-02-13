@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.7.0
+.VERSION 1.7.1
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -25,7 +25,7 @@
     Creation Date:    31.01.2022
 #>
 
-#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.SignIns'; ModuleVersion = '1.9.2'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '1.9.2'}, @{ ModuleName = 'Microsoft.Graph.Users'; ModuleVersion = '1.9.2'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryManagement'; ModuleVersion = '1.9.2'}, @{ ModuleName = 'Microsoft.Graph.Groups'; ModuleVersion = '1.9.2'}, @{ ModuleName = 'Microsoft.Graph.Applications'; ModuleVersion = '1.9.2'}
+#Requires -Module @{ ModuleName = 'Microsoft.Graph.Identity.SignIns'; ModuleVersion = '1.21.0'},@{ ModuleName = 'Microsoft.Graph.DirectoryObjects'; ModuleVersion = '1.21.0'}, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '1.21.0'}, @{ ModuleName = 'Microsoft.Graph.Users'; ModuleVersion = '1.21.0'}, @{ ModuleName = 'Microsoft.Graph.Identity.DirectoryManagement'; ModuleVersion = '1.21.0'}, @{ ModuleName = 'Microsoft.Graph.Groups'; ModuleVersion = '1.21.0'}, @{ ModuleName = 'Microsoft.Graph.Applications'; ModuleVersion = '1.21.0'}
 
 function Test-Guid {
     <#
