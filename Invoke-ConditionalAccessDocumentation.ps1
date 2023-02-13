@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.6.0
+.VERSION 1.7.0
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -102,13 +102,15 @@ if ((Get-MgProfile).Name.ToLower() -ne "beta") {
     Write-Warning "You can switch to the beta endpoint with: `"Select-MgProfile -Name `"beta`"`""
 }
 
+Write-Progress -PercentComplete -1 -Activity "Fetching conditional access policies and related data from Graph API"
+
 # Get Conditional Access Policies
 $conditionalAccessPolicies = Get-MgIdentityConditionalAccessPolicy -All -ErrorAction Stop
 #Get Conditional Access Named / Trusted Locations
 $namedLocations = Get-MgIdentityConditionalAccessNamedLocation -All -ErrorAction Stop | Group-Object -Property Id -AsHashTable
 if (-not $namedLocations) { $namedLocations = @{} }
 # Get Azure AD Directory Role Templates
-$directoryRoleTemplates = Get-MgDirectoryRoleTemplate -ErrorAction Stop | Group-Object -Property Id -AsHashTable
+$directoryRoleTemplates = Get-MgDirectoryRoleTemplate -All -ErrorAction Stop | Group-Object -Property Id -AsHashTable
 # Service Principals
 $servicePrincipals = Get-MgServicePrincipal -All -ErrorAction Stop | Group-Object -Property AppId -AsHashTable
 # Init report 
@@ -120,9 +122,16 @@ $displayNameCache = @{}
 foreach ($policy in $conditionalAccessPolicies) {
 
     # Display some progress (based on policy count)
-    $currentIndex = $conditionalAccessPolicies.indexOf($policy)
-    Write-Progress -Activity "Generating Conditional Access Documentation..." -PercentComplete (($currentIndex + 1) / $conditionalAccessPolicies.Count * 100) `
-        -CurrentOperation "Processing Policy '$($policy.DisplayName)' ($currentIndex/$($conditionalAccessPolicies.Count))"
+    $currentIndex = $conditionalAccessPolicies.indexOf($policy) + 1
+
+    $progress = @{
+        Activity         = "Generating Conditional Access Documentation..."
+        PercentComplete  = [Decimal]::Divide($currentIndex, $conditionalAccessPolicies.Count) * 100
+        CurrentOperation = "Processing Policy `"$($policy.DisplayName)`""
+    }
+    if ($currentIndex -eq $conditionalAccessPolicies.Count) { $progress.Add("Completed", $true) }
+
+    Write-Progress @progress
 
     Write-Output "Processing policy `"$($policy.DisplayName)`""
     
