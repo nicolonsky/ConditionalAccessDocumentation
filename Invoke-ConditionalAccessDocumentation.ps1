@@ -74,10 +74,11 @@ function Resolve-MgObject {
         if (Test-Guid -InputObject $InputObject) {
             try {
                 # use hashtable as cache to limit API calls
-                if ($displayNameCache.ContainsKey($InputObject)){
+                if ($displayNameCache.ContainsKey($InputObject)) {
                     Write-Debug "Cached display name for `"$InputObject`""
                     return $displayNameCache[$InputObject]
-                }else{
+                }
+                else {
                     $directoryObject = Get-MgDirectoryObject -DirectoryObjectId $InputObject -ErrorAction Stop
                     $displayName = $directoryObject.AdditionalProperties["displayName"]
                     $displayNameCache[$InputObject] = $displayName
@@ -245,6 +246,9 @@ foreach ($policy in $conditionalAccessPolicies) {
                 IncludeRoles                              = $includeRoles -join $separator
 
                 ExcludeUsers                              = $excludeUsers -join $separator
+                ExcludeGuestOrExternalUserTypes           = $policy.Conditions.Users.AdditionalProperties["excludeGuestsOrExternalUsers"].guestOrExternalUserTypes
+                ExcludeGuestOrExternalUserTenants         = $policy.Conditions.Users.AdditionalProperties["excludeGuestsOrExternalUsers"].externalTenants.members -join $separator
+
                 ExcludeGroups                             = $excludeGroups -join $separator
                 ExcludeRoles                              = $excludeRoles -join $separator
 
