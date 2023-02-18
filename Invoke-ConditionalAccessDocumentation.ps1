@@ -105,7 +105,7 @@ if ((Get-MgProfile).Name.ToLower() -ne "beta") {
 Write-Progress -PercentComplete -1 -Activity "Fetching conditional access policies and related data from Graph API"
 
 # Get Conditional Access Policies
-$conditionalAccessPolicies = Get-MgIdentityConditionalAccessPolicy -All -ErrorAction Stop
+$conditionalAccessPolicies = Get-MgIdentityConditionalAccessPolicy -ExpandProperty "*" -All -ErrorAction Stop
 #Get Conditional Access Named / Trusted Locations
 $namedLocations = Get-MgIdentityConditionalAccessNamedLocation -All -ErrorAction Stop | Group-Object -Property Id -AsHashTable
 if (-not $namedLocations) { $namedLocations = @{} }
@@ -218,7 +218,12 @@ foreach ($policy in $conditionalAccessPolicies) {
             }
         }
         
-        
+        $includeAuthenticationContext = [System.Collections.Generic.List[Object]]::new()
+        $policy.Conditions.Applications.IncludeAuthenticationContextClassReferences | ForEach-Object {
+            $context = Get-MgIdentityConditionalAccessAuthenticationContextClassReference -Filter "Id eq '$PSItem'"
+            $includeAuthenticationContext.Add($context.DisplayName)
+        }
+
         # Resolve object IDs of included locations
         $includeLocations = [System.Collections.Generic.List[Object]]::new()
         $policy.conditions.Locations.IncludeLocations | ForEach-Object {
@@ -243,7 +248,8 @@ foreach ($policy in $conditionalAccessPolicies) {
         # delimiter for arrays in csv report
         $separator = "`r`n"
         # when terms of use are present just add a generic hint.
-        if ($policy.GrantControls.TermsOfUse) { $policy.GrantControls.BuiltInControls += "TermsOfUse" }
+        if ($policy.GrantControls.TermsOfUse) { $policy.GrantControls.BuiltInControls += "termsOfUse" }
+        if ($policy.GrantControls.AuthenticationStrength) { $policy.GrantControls.BuiltInControls += "authenticationStrength" }
 
         # construct entry for report
         $documentation.Add(
@@ -255,8 +261,8 @@ foreach ($policy in $conditionalAccessPolicies) {
                 IncludeRoles                              = $includeRoles -join $separator
 
                 ExcludeUsers                              = $excludeUsers -join $separator
-                ExcludeGuestOrExternalUserTypes           = $policy.Conditions.Users.AdditionalProperties["excludeGuestsOrExternalUsers"].guestOrExternalUserTypes
-                ExcludeGuestOrExternalUserTenants         = $policy.Conditions.Users.AdditionalProperties["excludeGuestsOrExternalUsers"].externalTenants.members -join $separator
+                ExcludeGuestOrExternalUserTypes           = $policy.Conditions.Users.ExcludeGuestsOrExternalUsers.guestOrExternalUserTypes
+                ExcludeGuestOrExternalUserTenants         = $policy.Conditions.Users.ExcludeGuestsOrExternalUsers.externalTenants.AdditionalProperties["members"] -join $separator
 
                 ExcludeGroups                             = $excludeGroups -join $separator
                 ExcludeRoles                              = $excludeRoles -join $separator
@@ -264,9 +270,10 @@ foreach ($policy in $conditionalAccessPolicies) {
                 IncludeApps                               = $includeApps -join $separator
                 ExcludeApps                               = $excludeApps -join $separator
 
-                ApplicationFilterMode                     = $policy.Conditions.Applications.AdditionalProperties["applicationFilter"].mode
-                ApplicationFilterRule                     = $policy.Conditions.Applications.AdditionalProperties["applicationFilter"].rule
+                ApplicationFilterMode                     = $policy.Conditions.Applications.ApplicationFilter.mode
+                ApplicationFilterRule                     = $policy.Conditions.Applications.ApplicationFilter.rule
 
+                IncludeAuthenticationContext              = $includeAuthenticationContext -join $separator
                 IncludeUserActions                        = $policy.Conditions.Applications.IncludeUserActions -join $separator
                 ClientAppTypes                            = $policy.Conditions.ClientAppTypes -join $separator
 
@@ -281,19 +288,19 @@ foreach ($policy in $conditionalAccessPolicies) {
 
                 SignInRiskLevels                          = $policy.Conditions.SignInRiskLevels -join $separator
                 UserRiskLevels                            = $policy.Conditions.UserRiskLevels -join $separator
-                ServicePrincipalRiskLevels                = $policy.Conditions.AdditionalProperties["servicePrincipalRiskLevels"] -join $separator
+                ServicePrincipalRiskLevels                = $policy.Conditions.servicePrincipalRiskLevels -join $separator
                
                 # Workload Identity Protection
                 IncludeServicePrincipals                  = $includeServicePrincipals -join $separator
                 ExcludeServicePrincipals                  = $excludeServicePrincipals -join $separator
-                ServicePrincipalFilterMode                = $policy.Conditions.ClientApplications.AdditionalProperties["servicePrincipalFilter"].mode
-                ServicePrincipalFilter                    = $policy.Conditions.ClientApplications.AdditionalProperties["servicePrincipalFilter"].rule
+                ServicePrincipalFilterMode                = $policy.Conditions.ClientApplications.ServicePrincipalFilter.mode
+                ServicePrincipalFilter                    = $policy.Conditions.ClientApplications.ServicePrincipalFilter.rule
                
                 # Grantcontrols
                 GrantControls                             = $policy.GrantControls.BuiltInControls -join $separator
                 GrantControlsOperator                     = $policy.GrantControls.Operator
-                AuthenticationStrength                    = $policy.GrantControls.AdditionalProperties["authenticationStrength"].displayName
-                AuthenticationStrengthAllowedCombinations = $policy.GrantControls.AdditionalProperties["authenticationStrength"].allowedCombinations -join $separator
+                AuthenticationStrength                    = $policy.GrantControls.AuthenticationStrength.DisplayName
+                AuthenticationStrengthAllowedCombinations = $policy.GrantControls.AuthenticationStrength.AllowedCombinations -join $separator
 
                 # Session controls
                 ApplicationEnforcedRestrictions           = $policy.SessionControls.ApplicationEnforcedRestrictions.IsEnabled
