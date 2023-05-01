@@ -308,6 +308,7 @@ foreach ($policy in $conditionalAccessPolicies) {
                 DisableResilienceDefaults                 = $policy.SessionControls.DisableResilienceDefaults
                 PersistentBrowser                         = $policy.SessionControls.PersistentBrowser.Mode
                 SignInFrequency                           = "$($policy.SessionControls.SignInFrequency.Value) $($policy.SessionControls.SignInFrequency.Type)"
+                SecureSignInSession                       = $policy.SessionControls.AdditionalProperties["secureSignInSession"].isEnabled
 
                 # State
                 State                                     = $policy.State
