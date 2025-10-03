@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.8.0
+.VERSION 1.8.1
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -12,20 +12,21 @@
 
 .ICONURI https://raw.githubusercontent.com/microsoftgraph/g-raph/master/g-raph.png
 
-.DESCRIPTION This script documents Azure AD Conditional Access Policies.
+.DESCRIPTION This script documents Azure AD Conditional Access Policies using the latest Microsoft.Graph PowerShell module.
 
 .SYNOPSIS This script retrieves all Conditional Access Policies and translates Azure AD Object IDs to display names for users, groups, directory roles, locations...
 
 .EXAMPLE
-    Connect-Graph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All"
+    Connect-MgGraph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All"
     & .\Invoke-ConditionalAccessDocumentation.ps1
     Generates the documentation and exports the csv to the script directory.
 .NOTES
     Author:           Nicola Suter
     Creation Date:    31.01.2022
+    Updated:          25.08.2025
 #>
 
-#Requires -Module @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '2.12.0'}, @{ ModuleName = 'Microsoft.Graph.Beta.Applications'; ModuleVersion = '2.12.0' }, @{ ModuleName = 'Microsoft.Graph.Beta.Identity.SignIns'; ModuleVersion = '2.12.0' }, @{ ModuleName = 'Microsoft.Graph.Beta.Identity.DirectoryManagement'; ModuleVersion = '2.12.0'}, @{ ModuleName = 'Microsoft.Graph.Beta.DirectoryObjects'; ModuleVersion = '2.12.0'}
+#Requires -Module @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '2.30.0' }, @{ ModuleName = 'Microsoft.Graph.Applications'; ModuleVersion = '2.30.0' }, @{ ModuleName = 'Microsoft.Graph.Identity.SignIns'; ModuleVersion = '2.30.0' }, @{ ModuleName = 'Microsoft.Graph.Groups'; ModuleVersion = '2.30.0' }, @{ ModuleName = 'Microsoft.Graph.DirectoryObjects'; ModuleVersion = '2.30.0' }
 
 function Test-Guid {
     <#
@@ -58,9 +59,9 @@ function Resolve-MgObject {
     .DESCRIPTION
     Resolves a Microsoft Graph Directory Object to a Display Name when possible
     .EXAMPLE
-    
+
     .NOTES
-    
+
     #>
     [Cmdletbinding()]
     [OutputType([string])]
@@ -78,7 +79,7 @@ function Resolve-MgObject {
                     Write-Debug "Cached display name for `"$InputObject`""
                     return $displayNameCache[$InputObject]
                 } else {
-                    $directoryObject = Get-MgBetaDirectoryObject -DirectoryObjectId $InputObject -ErrorAction Stop
+                    $directoryObject = Get-MgDirectoryObject -DirectoryObjectId $InputObject -ErrorAction Stop
                     $displayName = $directoryObject.AdditionalProperties['displayName']
                     $displayNameCache[$InputObject] = $displayName
                     return $displayName
@@ -120,16 +121,20 @@ Update-TypeData @etd -Force
 Write-Progress -PercentComplete -1 -Activity 'Fetching conditional access policies and related data from Graph API'
 
 # Get Conditional Access Policies
-$conditionalAccessPolicies = Get-MgBetaIdentityConditionalAccessPolicy -ExpandProperty '*' -All -ErrorAction Stop
-#Get Conditional Access Named / Trusted Locations
-$namedLocations = Get-MgBetaIdentityConditionalAccessNamedLocation -All -ErrorAction Stop | Group-Object -Property Id -AsHashTable
+$conditionalAccessPolicies = Get-MgIdentityConditionalAccessPolicy -ExpandProperty '*' -All -ErrorAction Stop
+
+# Get Conditional Access Named / Trusted Locations
+$namedLocations = Get-MgIdentityConditionalAccessNamedLocation -All -ErrorAction Stop | Group-Object -Property Id -AsHashTable
 if (-not $namedLocations) { $namedLocations = @{} }
-# Get Azure AD Directory Role Templates
-$directoryRoleTemplates = Get-MgBetaDirectoryRoleTemplate -All -ErrorAction Stop | Group-Object -Property Id -AsHashTable
+
+# Get Azure AD Directory Role Templates (in latest module, use Get-MgDirectoryRoleTemplate)
+$directoryRoleTemplates = Get-MgDirectoryRoleTemplate -All -ErrorAction Stop | Group-Object -Property Id -AsHashTable
+
 # Service Principals
-$servicePrincipals = Get-MgBetaServicePrincipal -All -ErrorAction Stop | Group-Object -Property AppId -AsHashTable
-# GSA network filtering
-$networkFilteringProfiles = Invoke-MgGraphRequest -Uri 'beta/networkAccess/filteringProfiles' -OutputType PSObject -ErrorAction SilentlyContinue | Select-Object -ExpandProperty value | Group-Object -Property id -AsHashTable
+$servicePrincipals = Get-MgServicePrincipal -All -ErrorAction Stop | Group-Object -Property AppId -AsHashTable
+
+# GSA network filtering (no direct beta endpoint in new modules, use Invoke-MgGraphRequest as fallback)
+$networkFilteringProfiles = Invoke-MgGraphRequest -Uri 'https://graph.microsoft.com/beta/networkAccess/filteringProfiles' -Method GET -OutputType PSObject -ErrorAction SilentlyContinue | Select-Object -ExpandProperty value | Group-Object -Property id -AsHashTable
 
 # Init report 
 $documentation = [System.Collections.Generic.List[Object]]::new()
@@ -152,7 +157,7 @@ foreach ($policy in $conditionalAccessPolicies) {
     Write-Progress @progress
 
     Write-Output "Processing policy `"$($policy.DisplayName)`""
-    
+
     try {
         # Resolve object IDs of included users
         $includeUsers = $policy.Conditions.Users.IncludeUsers | ForEach-Object {
@@ -200,7 +205,7 @@ foreach ($policy in $conditionalAccessPolicies) {
         
         $includeAuthenticationContext = [System.Collections.Generic.List[Object]]::new()
         $policy.Conditions.Applications.IncludeAuthenticationContextClassReferences | ForEach-Object {
-            $context = Get-MgBetaIdentityConditionalAccessAuthenticationContextClassReference -Filter "Id eq '$PSItem'"
+            $context = Get-MgIdentityConditionalAccessAuthenticationContextClassReference -Filter "Id eq '$PSItem'"
             $includeAuthenticationContext.Add($context.DisplayName)
         }
 
@@ -214,7 +219,6 @@ foreach ($policy in $conditionalAccessPolicies) {
         }
 
         # GSA web filtering profiles
-    
         $webFilteringProfile = if ($policy.SessionControls.AdditionalProperties.ContainsKey('globalSecureAccessFilteringProfile')) {
             Write-Output $networkFilteringProfiles[$policy.SessionControls.AdditionalProperties['globalSecureAccessFilteringProfile']['profileId']].name
         } else {
@@ -299,7 +303,6 @@ foreach ($policy in $conditionalAccessPolicies) {
             }
         )
     } catch {
-        #Throw $_
         Write-Error $PSItem
     }
 }
