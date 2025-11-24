@@ -4,31 +4,26 @@
 ![GitHub](https://img.shields.io/github/license/nicolonsky/conditionalaccessdocumentation?style=flat-square)
 ![GitHub Release Date](https://img.shields.io/github/release-date/nicolonsky/conditionalaccessdocumentation?style=flat-square)
 
+This PowerShell script documents your Microsoft Entra Conditional Access policies. The script exports all data as a csv file which can be pretty formatted as excel workbook.
+To ensure all policies can be retrieved and documented the script uses the Microsoft Graph Beta API endpoint.
 
-This PowerShell script documents your Azure AD Conditional Access policies. The script exports all data as a csv file which can be pretty formatted as excel workbook.
+## Installation & Usage
 
-1. Install this script from the PowerShell gallery (dependent modules are automatically installed):
+1. Install this script from the PowerShell gallery (dependent `Microsoft.Graph.Authentication` module is automatically installed):
 
     * `Install-Script -Name Invoke-ConditionalAccessDocumentation -Scope CurrentUser`
-    
-    * Script is saved to the user's default script lcoation: 
-       - Windows : `"C:\Users\%USERNAME%\Documents\WindowsPowerShell\Scripts"`
-       - macOS: `~/.local/share/powershell/scripts`
-    
+    * Script is saved to the user's default script location:
+        * Windows : `C:\Users\%USERNAME%\Documents\WindowsPowerShell\Scripts`
+        * macOS: `~/.local/share/powershell/scripts`
 2. Connect to Microsoft Graph
 
     * Grant initial admin consent: `Connect-Graph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All" -ContextScope Process`
-    
-    * You can also connect to Microsoft Graph Beta endpoint with `Select-MgProfile -Name "Beta"`, this will also export policies with preview features like workload identities
-    
     * After initial admin consent has been granted you can connect with: `Connect-Graph` for subsequent usage
-    
+    * If you want to connect via Bearer Token from your Browser session you can use the following snippet to connect: ``Connect-MgGraph -AccessToken $((Get-Clipboard -Raw).Replace("Bearer ","").Replace("`n","") | ConvertTo-SecureString -AsPlainText -Force)``
 3. Run script via PowerShell dot sourcing
-    
-    * ```& "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Scripts\Invoke-ConditionalAccessDocumentation.ps1"```
-    
-4. (Optional) Pretty format the csv with excel & save it as excel workbook 
+
+    * ```.\Invoke-ConditionalAccessDocumentation.ps1```
+ 
+4. (Optional) Pretty format the csv with excel & save it as excel workbook
 
     * ![Example](https://raw.githubusercontent.com/nicolonsky/ConditionalAccessDocumentation/master/Example/Example.png)
-
-
