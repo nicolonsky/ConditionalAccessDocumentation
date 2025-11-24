@@ -15,7 +15,7 @@
     Creation Date:    31.01.2022
     Updated:          24.11.2025
 
-.VERSION 1.9.0
+.VERSION 1.9.1
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -30,40 +30,20 @@
 
 #Requires -Module @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '2.29.1' }
 
-function Test-Guid {
-    <#
-    .SYNOPSIS
-    Validates a given input string and checks string is a valid GUID
-    .DESCRIPTION
-    Validates a given input string and checks string is a valid GUID by using the .NET method Guid.TryParse
-    .EXAMPLE
-    Test-Guid -InputObject "3363e9e1-00d8-45a1-9c0c-b93ee03f8c13"
-    .NOTES
-    Uses .NET method [guid]::TryParse()
-    #>
-    [Cmdletbinding()]
-    [OutputType([bool])]
-    param
-    (
-        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
-        [AllowEmptyString()]
-        [string]$InputObject
-    )
-    process {
-        return [guid]::TryParse($InputObject, $([ref][guid]::Empty))
-    }
-}
-
 function Resolve-MgObject {
     <#
     .SYNOPSIS
     Resolve a Microsoft Graph item to display name
+
     .DESCRIPTION
     Resolves a Microsoft Graph Directory Object to a Display Name when possible
+    
     .EXAMPLE
-
+    Resolve-MgObject -InputObject "3363e9e1-00d8-45a1-9c0c-b93ee03f8c13"
+    Resolves the given object ID to a display name by querying Microsoft Graph API
+    
     .NOTES
-
+    Uses .NET method [guid]::TryParse() to check for valid GUIDs
     #>
     [Cmdletbinding()]
     [OutputType([string])]
@@ -74,7 +54,7 @@ function Resolve-MgObject {
         [string]$InputObject
     )
     process {
-        if (Test-Guid -InputObject $InputObject) {
+        if ([guid]::TryParse($InputObject, $([ref][guid]::Empty))) {
             try {
                 # use hashtable as cache to limit API calls
                 if ($displayNameCache.ContainsKey($InputObject)) {
@@ -125,7 +105,6 @@ Write-Progress -PercentComplete -1 -Activity 'Fetching conditional access polici
 # Get Conditional Access Policies
 $conditionalAccessPolicies = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/policies?$expand=*&top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value
 
-
 # Get Conditional Access Named / Trusted Locations
 $namedLocations = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/namedLocations?$top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
 if (-not $namedLocations) { $namedLocations = @{} }
@@ -134,17 +113,17 @@ if (-not $namedLocations) { $namedLocations = @{} }
 $directoryRoleTemplates = Invoke-MgGraphRequest -Uri 'beta/directoryRoleTemplates' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
 
 # Get service principals incl. paging
-$servicePrincipalBatches = @()
+$servicePrincipalBatches = [System.Collections.Generic.List[Object]]::new()
 $servicePrincipalsRequest = Invoke-MgGraphRequest -Uri 'beta/servicePrincipals' -Method GET -OutputType PSObject -ErrorAction Stop
 
 while ($servicePrincipalsRequest.'@odata.nextLink') {
-    $servicePrincipalBatches += $servicePrincipalsRequest.value
+    $servicePrincipalBatches.AddRange($servicePrincipalsRequest.value)
     $servicePrincipalsRequest = Invoke-MgGraphRequest -Uri $servicePrincipalsRequest.'@odata.nextLink' -Method GET -OutputType PSObject -ErrorAction Stop
 }
 
 $servicePrincipals = $servicePrincipalBatches | Group-Object -Property AppId -AsHashTable
 
-# GSA network filtering (no direct beta endpoint in new modules, use Invoke-MgGraphRequest as fallback)
+# GSA network filtering
 $networkFilteringProfiles = Invoke-MgGraphRequest -Uri '/beta/networkAccess/filteringProfiles' -Method GET -OutputType PSObject -ErrorAction SilentlyContinue | Select-Object -ExpandProperty value | Group-Object -Property id -AsHashTable
 
 # Init report 
