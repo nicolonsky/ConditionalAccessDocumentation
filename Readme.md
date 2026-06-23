@@ -17,7 +17,7 @@ To ensure all policies can be retrieved and documented the script uses the Micro
         * macOS: `~/.local/share/powershell/scripts`
 2. Connect to Microsoft Graph
 
-    * Grant initial admin consent: `Connect-Graph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All" -ContextScope Process`
+    * Grant initial admin consent: `Connect-Graph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All", "NetworkAccess.Read.All" -ContextScope Process`
     * After initial admin consent has been granted you can connect with: `Connect-Graph` for subsequent usage
     * If you want to connect via Bearer Token from your Browser session you can use the following snippet to connect: ``Connect-MgGraph -AccessToken $((Get-Clipboard -Raw).Replace("Bearer ","").Replace("`n","") | ConvertTo-SecureString -AsPlainText -Force)``
 3. Run script via PowerShell dot sourcing

@@ -7,15 +7,15 @@
     This script retrieves all Conditional Access Policies and translates Microsoft Entra Object IDs to display names for users, groups, directory roles, locations...
 
 .EXAMPLE
-    Connect-MgGraph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All"
+    Connect-MgGraph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All", "NetworkAccess.Read.All"
     & .\Invoke-ConditionalAccessDocumentation.ps1
     Generates the documentation and exports the csv to the script directory.
 .NOTES
     Author:           Nicola Suter
     Creation Date:    31.01.2022
-    Updated:          24.11.2025
+    Updated:          23.06.2026
 
-.VERSION 1.9.1
+.VERSION 1.9.2
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -60,13 +60,15 @@ function Resolve-MgObject {
                 if ($displayNameCache.ContainsKey($InputObject)) {
                     Write-Debug "Cached display name for `"$InputObject`""
                     return $displayNameCache[$InputObject]
-                } else {
+                }
+                else {
                     $directoryObject = Invoke-MgGraphRequest -Uri ('beta/directoryObjects/{0}?$select=displayName' -f $InputObject) -Method GET -OutputType PSObject -ErrorAction Stop
                     $displayName = $directoryObject.displayName
                     $displayNameCache[$InputObject] = $displayName
                     return $displayName
                 }
-            } catch {
+            }
+            catch {
                 Write-Warning "Unable to resolve directory object with ID $InputObject, might have been deleted!"
             }
         }
@@ -89,10 +91,12 @@ $etd = @{
             if ($this.ContainsKey($key)) {
                 if ($this[$key].DisplayName) {
                     return $this[$key].DisplayName
-                } else {
+                }
+                else {
                     return $this[$key]
                 }
-            } else {
+            }
+            else {
                 return $defaultValue
             } 
         }
@@ -102,19 +106,24 @@ Update-TypeData @etd -Force
 
 Write-Progress -PercentComplete -1 -Activity 'Fetching conditional access policies and related data from Graph API'
 
-# Get Conditional Access Policies
-$conditionalAccessPolicies = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/policies?$expand=*&top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value
+try {
+    # Get Conditional Access Policies
+    $conditionalAccessPolicies = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/policies?$expand=*&top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value
 
-# Get Conditional Access Named / Trusted Locations
-$namedLocations = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/namedLocations?$top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
-if (-not $namedLocations) { $namedLocations = @{} }
+    # Get Conditional Access Named / Trusted Locations
+    $namedLocations = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/namedLocations?$top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
+    if (-not $namedLocations) { $namedLocations = @{} }
 
-# Get Azure AD Directory Role Templates (in latest module, use Get-MgDirectoryRoleTemplate)
-$directoryRoleTemplates = Invoke-MgGraphRequest -Uri 'beta/directoryRoleTemplates' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
+    # Get Azure AD Directory Role Templates (in latest module, use Get-MgDirectoryRoleTemplate)
+    $directoryRoleTemplates = Invoke-MgGraphRequest -Uri 'beta/directoryRoleTemplates' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
 
-# Get service principals incl. paging
-$servicePrincipalBatches = [System.Collections.Generic.List[Object]]::new()
-$servicePrincipalsRequest = Invoke-MgGraphRequest -Uri 'beta/servicePrincipals' -Method GET -OutputType PSObject -ErrorAction Stop
+    # Get service principals incl. paging
+    $servicePrincipalBatches = [System.Collections.Generic.List[Object]]::new()
+    $servicePrincipalsRequest = Invoke-MgGraphRequest -Uri 'beta/servicePrincipals' -Method GET -OutputType PSObject -ErrorAction Stop
+}
+catch {
+    throw $_
+}
 
 while ($servicePrincipalsRequest.'@odata.nextLink') {
     $servicePrincipalBatches.AddRange($servicePrincipalsRequest.value)
@@ -124,7 +133,12 @@ while ($servicePrincipalsRequest.'@odata.nextLink') {
 $servicePrincipals = $servicePrincipalBatches | Group-Object -Property AppId -AsHashTable
 
 # GSA network filtering
-$networkFilteringProfiles = Invoke-MgGraphRequest -Uri '/beta/networkAccess/filteringProfiles' -Method GET -OutputType PSObject -ErrorAction SilentlyContinue | Select-Object -ExpandProperty value | Group-Object -Property id -AsHashTable
+$networkFilteringProfiles = try {
+    Invoke-MgGraphRequest -Uri '/beta/networkAccess/filteringProfiles' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property id -AsHashTable
+}
+catch {
+    Write-Warning "Failed to fetch GSA filtering profiles, check for required permissions. (NetworkAccess.Read.All)"
+}
 
 # Init report 
 $documentation = [System.Collections.Generic.List[Object]]::new()
@@ -158,6 +172,7 @@ foreach ($policy in $conditionalAccessPolicies) {
         $excludeUsers = $policy.conditions.users.excludeUsers | ForEach-Object {
             Resolve-MgObject -InputObject $PSItem
         }
+
         # Resolve object IDs of included groups
         $includeGroups = $policy.conditions.users.includeGroups | ForEach-Object {
             Resolve-MgObject -InputObject $PSItem
@@ -214,7 +229,8 @@ foreach ($policy in $conditionalAccessPolicies) {
         # GSA web filtering profiles
         $webFilteringProfile = if ($policy.sessionControls.globalSecureAccessFilteringProfile) {
             Write-Output $networkFilteringProfiles[$policy.sessionControls.globalSecureAccessFilteringProfile.profileId].name
-        } else {
+        }
+        else {
             Write-Output $null
         }
 
@@ -222,11 +238,13 @@ foreach ($policy in $conditionalAccessPolicies) {
         $signInFrequency = if ($policy.sessionControls.SignInFrequency) { 
             if ($policy.sessionControls.signInFrequency.frequencyInterval -eq 'timeBased' ) {
                 "$($policy.sessionControls.SignInFrequency.Value) $($policy.sessionControls.SignInFrequency.Type)"
-            } else {
+            }
+            else {
                 $policy.sessionControls.signInFrequency.frequencyInterval
             }
 
-        } else { $null }
+        }
+        else { $null }
 
         # delimiter for arrays in csv report
         $separator = "`r`n"
@@ -249,6 +267,8 @@ foreach ($policy in $conditionalAccessPolicies) {
                 IncludeUsers                              = $includeUsers -join $separator
                 IncludeGroups                             = $includeGroups -join $separator
                 IncludeRoles                              = $includeRoles -join $separator
+                IncludeGuestOrExternalUserTypes           = $policy.conditions.users.includeGuestsOrExternalUsers.guestOrExternalUserTypes
+                IncludeGuestOrExternalUserTenants         = $policy.conditions.users.includeGuestsOrExternalUsers.externalTenants.members -join $separator
 
                 ExcludeUsers                              = $excludeUsers -join $separator
                 ExcludeGuestOrExternalUserTypes           = $policy.conditions.users.excludeGuestsOrExternalUsers.guestOrExternalUserTypes
@@ -306,7 +326,8 @@ foreach ($policy in $conditionalAccessPolicies) {
                 State                                     = $policy.State
             }
         )
-    } catch {
+    }
+    catch {
         Write-Error $PSItem
     }
 }
