@@ -7,7 +7,7 @@
     This script retrieves all Conditional Access Policies and translates Microsoft Entra Object IDs to display names for users, groups, directory roles, locations...
 
 .EXAMPLE
-    Connect-MgGraph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All"
+    Connect-MgGraph -Scopes "Application.Read.All", "Group.Read.All", "Policy.Read.All", "RoleManagement.Read.Directory", "User.Read.All", "NetworkAccess.Read.All"
     & .\Invoke-ConditionalAccessDocumentation.ps1
     Generates the documentation and exports the csv to the script directory.
 .NOTES
@@ -106,19 +106,24 @@ Update-TypeData @etd -Force
 
 Write-Progress -PercentComplete -1 -Activity 'Fetching conditional access policies and related data from Graph API'
 
-# Get Conditional Access Policies
-$conditionalAccessPolicies = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/policies?$expand=*&top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value
+try {
+    # Get Conditional Access Policies
+    $conditionalAccessPolicies = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/policies?$expand=*&top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value
 
-# Get Conditional Access Named / Trusted Locations
-$namedLocations = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/namedLocations?$top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
-if (-not $namedLocations) { $namedLocations = @{} }
+    # Get Conditional Access Named / Trusted Locations
+    $namedLocations = Invoke-MgGraphRequest -Uri 'beta/identity/conditionalAccess/namedLocations?$top=999' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
+    if (-not $namedLocations) { $namedLocations = @{} }
 
-# Get Azure AD Directory Role Templates (in latest module, use Get-MgDirectoryRoleTemplate)
-$directoryRoleTemplates = Invoke-MgGraphRequest -Uri 'beta/directoryRoleTemplates' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
+    # Get Azure AD Directory Role Templates (in latest module, use Get-MgDirectoryRoleTemplate)
+    $directoryRoleTemplates = Invoke-MgGraphRequest -Uri 'beta/directoryRoleTemplates' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property Id -AsHashTable
 
-# Get service principals incl. paging
-$servicePrincipalBatches = [System.Collections.Generic.List[Object]]::new()
-$servicePrincipalsRequest = Invoke-MgGraphRequest -Uri 'beta/servicePrincipals' -Method GET -OutputType PSObject -ErrorAction Stop
+    # Get service principals incl. paging
+    $servicePrincipalBatches = [System.Collections.Generic.List[Object]]::new()
+    $servicePrincipalsRequest = Invoke-MgGraphRequest -Uri 'beta/servicePrincipals' -Method GET -OutputType PSObject -ErrorAction Stop
+}
+catch {
+    throw $_
+}
 
 while ($servicePrincipalsRequest.'@odata.nextLink') {
     $servicePrincipalBatches.AddRange($servicePrincipalsRequest.value)
@@ -128,7 +133,12 @@ while ($servicePrincipalsRequest.'@odata.nextLink') {
 $servicePrincipals = $servicePrincipalBatches | Group-Object -Property AppId -AsHashTable
 
 # GSA network filtering
-$networkFilteringProfiles = Invoke-MgGraphRequest -Uri '/beta/networkAccess/filteringProfiles' -Method GET -OutputType PSObject -ErrorAction SilentlyContinue | Select-Object -ExpandProperty value | Group-Object -Property id -AsHashTable
+$networkFilteringProfiles = try {
+    Invoke-MgGraphRequest -Uri '/beta/networkAccess/filteringProfiles' -Method GET -OutputType PSObject -ErrorAction Stop | Select-Object -ExpandProperty value | Group-Object -Property id -AsHashTable
+}
+catch {
+    Write-Warning "Failed to fetch GSA filtering profiles, check for required permissions. (NetworkAccess.Read.All)"
+}
 
 # Init report 
 $documentation = [System.Collections.Generic.List[Object]]::new()
