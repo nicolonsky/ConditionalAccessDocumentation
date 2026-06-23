@@ -13,9 +13,9 @@
 .NOTES
     Author:           Nicola Suter
     Creation Date:    31.01.2022
-    Updated:          24.11.2025
+    Updated:          23.06.2026
 
-.VERSION 1.9.1
+.VERSION 1.9.2
 
 .GUID 6c861af7-d12e-4ea2-b5dc-56fee16e0107
 
@@ -60,13 +60,15 @@ function Resolve-MgObject {
                 if ($displayNameCache.ContainsKey($InputObject)) {
                     Write-Debug "Cached display name for `"$InputObject`""
                     return $displayNameCache[$InputObject]
-                } else {
+                }
+                else {
                     $directoryObject = Invoke-MgGraphRequest -Uri ('beta/directoryObjects/{0}?$select=displayName' -f $InputObject) -Method GET -OutputType PSObject -ErrorAction Stop
                     $displayName = $directoryObject.displayName
                     $displayNameCache[$InputObject] = $displayName
                     return $displayName
                 }
-            } catch {
+            }
+            catch {
                 Write-Warning "Unable to resolve directory object with ID $InputObject, might have been deleted!"
             }
         }
@@ -89,10 +91,12 @@ $etd = @{
             if ($this.ContainsKey($key)) {
                 if ($this[$key].DisplayName) {
                     return $this[$key].DisplayName
-                } else {
+                }
+                else {
                     return $this[$key]
                 }
-            } else {
+            }
+            else {
                 return $defaultValue
             } 
         }
@@ -158,6 +162,7 @@ foreach ($policy in $conditionalAccessPolicies) {
         $excludeUsers = $policy.conditions.users.excludeUsers | ForEach-Object {
             Resolve-MgObject -InputObject $PSItem
         }
+
         # Resolve object IDs of included groups
         $includeGroups = $policy.conditions.users.includeGroups | ForEach-Object {
             Resolve-MgObject -InputObject $PSItem
@@ -214,7 +219,8 @@ foreach ($policy in $conditionalAccessPolicies) {
         # GSA web filtering profiles
         $webFilteringProfile = if ($policy.sessionControls.globalSecureAccessFilteringProfile) {
             Write-Output $networkFilteringProfiles[$policy.sessionControls.globalSecureAccessFilteringProfile.profileId].name
-        } else {
+        }
+        else {
             Write-Output $null
         }
 
@@ -222,11 +228,13 @@ foreach ($policy in $conditionalAccessPolicies) {
         $signInFrequency = if ($policy.sessionControls.SignInFrequency) { 
             if ($policy.sessionControls.signInFrequency.frequencyInterval -eq 'timeBased' ) {
                 "$($policy.sessionControls.SignInFrequency.Value) $($policy.sessionControls.SignInFrequency.Type)"
-            } else {
+            }
+            else {
                 $policy.sessionControls.signInFrequency.frequencyInterval
             }
 
-        } else { $null }
+        }
+        else { $null }
 
         # delimiter for arrays in csv report
         $separator = "`r`n"
@@ -249,6 +257,8 @@ foreach ($policy in $conditionalAccessPolicies) {
                 IncludeUsers                              = $includeUsers -join $separator
                 IncludeGroups                             = $includeGroups -join $separator
                 IncludeRoles                              = $includeRoles -join $separator
+                IncludeGuestOrExternalUserTypes           = $policy.conditions.users.includeGuestsOrExternalUsers.guestOrExternalUserTypes
+                IncludeGuestOrExternalUserTenants         = $policy.conditions.users.includeGuestsOrExternalUsers.externalTenants.members -join $separator
 
                 ExcludeUsers                              = $excludeUsers -join $separator
                 ExcludeGuestOrExternalUserTypes           = $policy.conditions.users.excludeGuestsOrExternalUsers.guestOrExternalUserTypes
@@ -306,7 +316,8 @@ foreach ($policy in $conditionalAccessPolicies) {
                 State                                     = $policy.State
             }
         )
-    } catch {
+    }
+    catch {
         Write-Error $PSItem
     }
 }
